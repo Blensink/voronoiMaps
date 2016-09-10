@@ -166,6 +166,8 @@
         var seeds = this.generateSeeds(numLandSeeds+numWaterSeeds);
         var landSeeds = seeds.slice(0,numLandSeeds);
         var waterSeeds = seeds.slice(numLandSeeds,seeds.length);
+        var landCells = landSeeds.splice();
+        var waterCells = waterSeeds.splice();
 
         // Keep a running tab of all the cells we still have to visit
         var cellsToVisit = [];
@@ -184,7 +186,8 @@
         }
 
         // While we've still got cells to visit, do all of things
-       while(cellsToVisit.length > 0) {
+      while(cellsToVisit.length > 0) {
+// for (var a = 0; a < 2; a++) {
         // For each cell in the edge, visit the neighbors and keep track of the new edges
           for (var i = 0; i < cellsEdge.length; i++) {
             var cellSite = cellsEdge[i];
@@ -201,23 +204,32 @@
                 if(cellsToVisit.indexOf(otherSite) != -1) {
                   newOuterEdge.push(otherSite);
                   cellsToVisit.splice(cellsToVisit.indexOf(otherSite),1);
-                }
-                // Fill in neighbor cells
-                var cell = cells[otherSite];
-                var halfedges = cell.halfedges;
-                var nHalfEdges = halfedges.length;
-                if(nHalfEdges) {
-                  var v = halfedges[0].getStartpoint();
-                  ctx.beginPath();
-                  ctx.moveTo(v.x,v.y);
-                  for(iHalfedge=0; iHalfedge<nHalfEdges; iHalfedge++) {
-                    v = halfedges[iHalfedge].getEndpoint();
-                    ctx.lineTo(v.x, v.y);
+                  // Fill in neighbor cells
+                  var cell = cells[otherSite];
+                  var halfedges = cell.halfedges;
+                  var nHalfEdges = halfedges.length;
+                  if(nHalfEdges) {
+                    var v = halfedges[0].getStartpoint();
+                    ctx.beginPath();
+                    ctx.moveTo(v.x,v.y);
+                    for(iHalfedge=0; iHalfedge<nHalfEdges; iHalfedge++) {
+                      v = halfedges[iHalfedge].getEndpoint();
+                      ctx.lineTo(v.x, v.y);
+                    }
+                    if(landSeeds.indexOf(cellSite) == -1) {
+                      waterSeeds.push(otherSite);
+                      ctx.fillStyle = 'rgba(0,76,153,'+0.2*cellShaderLevel+')';
+                    }else {
+                      landSeeds.push(otherSite);
+                      ctx.fillStyle = 'rgba(204,0,0,'+0.2*cellShaderLevel+')';
+                    }
+
+                  //  var amountGrey = 255-(255/(3*Math.ceil(Math.log(numSites))))*cellShaderLevel;
+                  //   ctx.fillStyle = 'rgba('+amountGrey+','+amountGrey+','+amountGrey+',1)';
+                    ctx.fill();
                   }
-                  var amountGrey = 255-(255/(3*Math.ceil(Math.log(numSites))))*cellShaderLevel;
-                  ctx.fillStyle = 'rgba('+amountGrey+','+amountGrey+','+amountGrey+',1)';
-                  ctx.fill();
                 }
+
               }
             }
           }
