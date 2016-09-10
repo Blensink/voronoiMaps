@@ -163,59 +163,59 @@
         var numCells = cells.length;
 
         // Pick n,m random seed cells for land and water
-        var landSeed = Math.floor(Math.random() * numCells);
-        //var waterSeed = Math.floor(Math.random() * numCells );
+        var seeds = this.generateSeeds(numLandSeeds+numWaterSeeds);
+        var landSeeds = seeds.slice(0,numLandSeeds);
+        var waterSeeds = seeds.slice(numLandSeeds,seeds.length);
 
-        var landCell = cells[landSeed];
-
-        var cellsToVisit = cells;
-
-        // Keep track of all the cells we've visited, starting with the seed cells.
-        var cellsVisited = [];
-        cellsVisited.push(landSeed);
+        // Keep a running tab of all the cells we still have to visit
+        var cellsToVisit = [];
+        for (var i = 0; i <= numSites-1; i++) {
+          if(seeds.indexOf(i) == -1) {
+            cellsToVisit.push(i);
+          }
+        }
 
         // And cells on the 'edge', which will just be our seed cells for now
         var cellsEdge = [];
-        cellsEdge.push(landSeed);
-
         var newOuterEdge = [];
         var cellShaderLevel = 1;
+        for (var i = 0; i < seeds.length; i++) {
+          cellsEdge.push(seeds[i]);
+        }
+        console.log("Seeds:", seeds);
 
-        // While we still have cells to visit along the edge, visit them
-        while(cellsEdge.length > 0 ) {
-          // Track the new outer edge as we discover cells
-          newOuterEdge.length = 0;
-          // And a counter to shade cells
-          // For every current neighbor, explore all of its neighbors
+        // While we've still got cells to visit, do all of things
+       while(cellsToVisit.length > 0) {
+  //      for (var k = 0; k <= 9; k++) {
+        // For each cell in the edge, visit the neighbors and keep track of the new edges
           for (var i = 0; i < cellsEdge.length; i++) {
-            // Store the cell we're at
             var cellSite = cellsEdge[i];
-            // And all the edges along it
             var edges = cells[cellSite].halfedges;
+            // Visit each neighbor.
             for(var j=0; j<edges.length; j++) {
-              // Keep track of the left and right cell of the edge
               var lSite = edges[j].edge.lSite != null ? edges[j].edge.lSite.voronoiId : null;
               var rSite = edges[j].edge.rSite != null ? edges[j].edge.rSite.voronoiId : null;
               // If the edge isn't a border along the outside
               if (lSite != null && rSite != null) {
-                // Keep track of the new cell
+                // If we haven't visited the cell already, add it to our edge,
+                //  then remove it from our todo
                 var otherSite = lSite == cellSite ? rSite : lSite;
-                if(newOuterEdge.indexOf(otherSite) == -1 && cellsVisited.indexOf(otherSite) == -1 ) {
+                if(cellsToVisit.indexOf(otherSite) != -1) {
                   newOuterEdge.push(otherSite);
-                  cellsVisited.push(otherSite);
+                  cellsToVisit.splice(cellsToVisit.indexOf(otherSite),1);
                 }
-                  // Fill in neighbor cells
-                  var cell = cells[otherSite];
-                  var halfedges = cell.halfedges;
-                  var nHalfEdges = halfedges.length;
-                  if(nHalfEdges) {
-                    var v = halfedges[0].getStartpoint();
-                    ctx.beginPath();
-                    ctx.moveTo(v.x,v.y);
-                    for(iHalfedge=0; iHalfedge<nHalfEdges; iHalfedge++) {
-                      v = halfedges[iHalfedge].getEndpoint();
-                      ctx.lineTo(v.x, v.y);
-                    }
+                // Fill in neighbor cells
+                var cell = cells[otherSite];
+                var halfedges = cell.halfedges;
+                var nHalfEdges = halfedges.length;
+                if(nHalfEdges) {
+                  var v = halfedges[0].getStartpoint();
+                  ctx.beginPath();
+                  ctx.moveTo(v.x,v.y);
+                  for(iHalfedge=0; iHalfedge<nHalfEdges; iHalfedge++) {
+                    v = halfedges[iHalfedge].getEndpoint();
+                    ctx.lineTo(v.x, v.y);
+                  }
                   var amountGrey = 255-(255/(3*Math.ceil(Math.log(numSites))))*cellShaderLevel;
                   ctx.fillStyle = 'rgba('+amountGrey+','+amountGrey+','+amountGrey+',1)';
                   ctx.fill();
@@ -223,9 +223,30 @@
               }
             }
           }
+          // Copy our newOuterEdge to cellsEdge and clear cellsEdge
+          cellsEdge.length = 0;
           cellsEdge = newOuterEdge.slice();
           cellShaderLevel += 1;
-        }
+          newOuterEdge.length = 0;
+
+          console.log(cellsToVisit);
+       }
+      },
+
+      /**
+       * Generate n random seeds to use
+       */
+      generateSeeds: function(n) {
+        var arr = []
+        while(arr.length < n) {
+          var randomnumber=Math.ceil(Math.random()*numSites);
+          var found=false;
+          for(var i=0;i<arr.length;i++){
+	           if(arr[i]==randomnumber){found=true;break}
+           }
+           if(!found)arr[arr.length]=randomnumber;
+         }
+         return arr;
       },
     };
   </script>
