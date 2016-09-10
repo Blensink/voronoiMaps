@@ -182,11 +182,9 @@
         for (var i = 0; i < seeds.length; i++) {
           cellsEdge.push(seeds[i]);
         }
-        console.log("Seeds:", seeds);
 
         // While we've still got cells to visit, do all of things
        while(cellsToVisit.length > 0) {
-  //      for (var k = 0; k <= 9; k++) {
         // For each cell in the edge, visit the neighbors and keep track of the new edges
           for (var i = 0; i < cellsEdge.length; i++) {
             var cellSite = cellsEdge[i];
@@ -228,8 +226,6 @@
           cellsEdge = newOuterEdge.slice();
           cellShaderLevel += 1;
           newOuterEdge.length = 0;
-
-          console.log(cellsToVisit);
        }
       },
 
