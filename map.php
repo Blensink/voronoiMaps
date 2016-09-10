@@ -7,15 +7,15 @@
     /***********************************************************************************************
     * Config options
     ***********************************************************************************************/
-    var numSites = 100;
+    var numSites = 600;
     var bboxWidth = 800;
     var bboxHeight = 600;
 
     var landChance = 0.75;
     var waterChance = 1-landChance;
 
-    var numLandSeeds = 1;
-    var numWaterSeeds = 1;
+    var numLandSeeds = 4;
+    var numWaterSeeds = 4;
 
     /***********************************************************************************************
     * Core Functionality
@@ -162,6 +162,8 @@
         var ctx = this.canvas.getContext('2d');
         var numCells = cells.length;
 
+        console.log(this.colorCell(0.25));
+
         // Pick n,m random seed cells for land and water
         var seeds = this.generateSeeds(numLandSeeds+numWaterSeeds);
         var landSeeds = seeds.slice(0,numLandSeeds);
@@ -217,11 +219,29 @@
                       ctx.lineTo(v.x, v.y);
                     }
                     if(landSeeds.indexOf(cellSite) == -1) {
-                      waterSeeds.push(otherSite);
-                      ctx.fillStyle = 'rgba(0,76,153,'+0.2*cellShaderLevel+')';
+                      if(this.colorCell(waterChance)) {
+                        waterSeeds.push(otherSite);
+                        ctx.fillStyle = 'blue';
+                      //  ctx.fillStyle = 'rgba(0,76,153,'+0.12*cellShaderLevel+')';
+                      } else {
+                        landSeeds.push(otherSite);
+                      //  ctx.fillStyle = 'rgba(204,0,0,'+0.12*cellShaderLevel+')';
+                      ctx.fillStyle = 'red';
+
+                      }
                     }else {
-                      landSeeds.push(otherSite);
-                      ctx.fillStyle = 'rgba(204,0,0,'+0.2*cellShaderLevel+')';
+                      if(this.colorCell(landChance)) {
+                        landSeeds.push(otherSite);
+                        //ctx.fillStyle = 'rgba(204,0,0,'+0.12*cellShaderLevel+')';
+                        ctx.fillStyle = 'red';
+
+
+                      } else {
+                        waterSeeds.push(otherSite);
+                      //  ctx.fillStyle = 'rgba(0,76,153,'+0.12*cellShaderLevel+')';
+                      ctx.fillStyle = 'blue';
+
+                      }
                     }
 
                   //  var amountGrey = 255-(255/(3*Math.ceil(Math.log(numSites))))*cellShaderLevel;
@@ -239,6 +259,10 @@
           cellShaderLevel += 1;
           newOuterEdge.length = 0;
        }
+      },
+
+      colorCell: function(chance) {
+        return Math.random() > chance;
       },
 
       /**
