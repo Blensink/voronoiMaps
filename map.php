@@ -9,12 +9,18 @@
 
   <script type="text/javascript" src="js/rhill-voronoi-core.min.js"></script>
   <script type="text/javascript" src="js/mapGenerator.js"></script>
-  <script src="js/foundation.min.js"></script>
+  <script src="js/vendor/jquery.js"></script>
+  <script src="js/vendor/foundation.min.js"></script>
   <script>
     $(document).foundation();
   </script>
 </head>
 <body onload="generateVoronoi.init()">
+  <div class="row header">
+    <div class="small-12 columns">
+      <h1>Voronoi Maps!</h1>
+    </div>
+  </div>
   <div class="row">
     <div class="small-3 columns">
     </div>
