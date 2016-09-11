@@ -2,15 +2,15 @@
   /***********************************************************************************************
   * Config options
   ***********************************************************************************************/
-  var numSites = 600;
+  var numSites = 10;
   var bboxWidth = 800;
   var bboxHeight = 600;
 
   var landChance = 0.7;
   var waterChance = 1-landChance;
 
-  var numLandSeeds = 4;
-  var numWaterSeeds = 4;
+  var numLandSeeds = 1;
+  var numWaterSeeds = 1;
 
   /***********************************************************************************************
   * Core Functionality

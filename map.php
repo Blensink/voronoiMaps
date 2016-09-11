@@ -22,10 +22,10 @@
     </div>
   </div>
   <div class="row">
-    <div class="small-3 columns">
-    </div>
     <div class="small-9 columns">
         <canvas id="voronoiCanvas" width="800" height="600"></canvas>
+    </div>
+    <div class="small-3 columns">
     </div>
   </div>
 
