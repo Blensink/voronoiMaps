@@ -2,11 +2,13 @@
   /***********************************************************************************************
   * Config options
   ***********************************************************************************************/
-  var numSites = 10;
+  var numSites = 1000;
   var bboxWidth = 800;
   var bboxHeight = 600;
+  var landColor = 'rgb(87,188,144)'; //57bc90
+  var waterColor = 'rgb(110,196,219)'; //88bbd6
 
-  var landChance = 0.7;
+  var landChance = 0.8;
   var waterChance = 1-landChance;
 
   var numLandSeeds = 1;
@@ -24,6 +26,10 @@
     bbox: {xl:0,xr:bboxWidth,yt:0,yb:bboxHeight},
 
     init: function() {
+      this.canvas = document.getElementById('basicCanvas');
+      this.randomSites(numSites,true);
+      this.renderVoronoiBasic(this.diagram.cells);
+
       this.canvas = document.getElementById('voronoiCanvas');
       this.randomSites(numSites,true);
       this.renderVoronoi();
@@ -87,7 +93,7 @@
 
       // Render vertices
       ctx.beginPath();
-      ctx.fillStyle = 'black';
+      ctx.fillStyle = 'white';
       var vertices = this.diagram.vertices,
       iVertex = vertices.length;
       while (iVertex--) {
@@ -97,15 +103,70 @@
       ctx.fill();
 
       // Render the seed sites
+      // ctx.beginPath();
+      // ctx.fillStyle = '#44f';
+      // var sites = this.sites,
+      // iSite = sites.length;
+      // while (iSite--) { // Uncomment to label sites
+      //   v = sites[iSite];
+      //   ctx.rect(v.x-2/3, v.y-2/3, 3, 3);
+      //   ctx.font = "10px Arial";
+      //   ctx.fillText(v.voronoiId,v.x,v.y);
+      // }
+      // ctx.fill();
+    },
+
+    renderVoronoiBasic: function() {
+      var ctx = this.canvas.getContext('2d');
+
+      // Render background
+      ctx.globalAlpha = 1;
+      ctx.beginPath();
+      ctx.rect(0, 0, this.canvas.width, this.canvas.height);
+      ctx.fillStyle = 'white';
+      ctx.fill();
+      ctx.strokeStyle = '#888';
+      ctx.stroke();
+
+      // Make sure we're got seed points
+      if (!this.diagram) {return;}
+
+      // Render edges
+      ctx.beginPath();
+      ctx.strokeStyle = 'lightGrey';
+      var edges = this.diagram.edges,
+      iEdge = edges.length,
+      edge, v;
+      while (iEdge--) {
+        edge = edges[iEdge];
+        v = edge.va;
+        ctx.moveTo(v.x, v.y);
+        v = edge.vb;
+        ctx.lineTo(v.x, v.y);
+      }
+      ctx.stroke();
+
+      // Render vertices
+      ctx.beginPath();
+      ctx.fillStyle = 'grey';
+      var vertices = this.diagram.vertices,
+      iVertex = vertices.length;
+      while (iVertex--) {
+        v = vertices[iVertex];
+        ctx.rect(v.x-1, v.y-1, 2, 2);
+      }
+      ctx.fill();
+
+      // Render the seed sites
       ctx.beginPath();
       ctx.fillStyle = '#44f';
       var sites = this.sites,
       iSite = sites.length;
-      while (iSite--) {
+      while (iSite--) { // Uncomment to label sites
         v = sites[iSite];
         ctx.rect(v.x-2/3, v.y-2/3, 3, 3);
-        ctx.font = "10px Arial";
-        ctx.fillText(v.voronoiId,v.x,v.y);
+        // ctx.font = "10px Arial";
+        // ctx.fillText(v.voronoiId,v.x,v.y);
       }
       ctx.fill();
     },
@@ -290,8 +351,6 @@
       var ctx = this.canvas.getContext('2d');
       var numCells = cells.length;
 
-      console.log(this.colorCell(0.25));
-
       // Pick n,m random seed cells for land and water
       var seeds = this.generateSeeds(numLandSeeds+numWaterSeeds);
       var landSeeds = seeds.slice(0,numLandSeeds);
@@ -316,7 +375,7 @@
       }
 
       // While we've still got cells to visit, do all of things
-    while(cellsToVisit.length > 0) {
+      while(cellsToVisit.length > 0) {
       // For each cell in the edge, visit the neighbors and keep track of the new edges
         for (var i = 0; i < cellsEdge.length; i++) {
           var cellSite = cellsEdge[i];
@@ -349,18 +408,18 @@
                   if(this.contains(landSeeds, cellSite)) {
                     if(this.colorCell(landChance)) {
                       landSeeds.push(otherSite);
-                      ctx.fillStyle = 'rgba(204,0,0,1)';//'+0.2*cellShaderLevel+')';
+                      ctx.fillStyle = landColor;//'+0.2*cellShaderLevel+')';
                     } else {
                       waterSeeds.push(otherSite);
-                      ctx.fillStyle = 'rgba(0,76,153,1)';
+                      ctx.fillStyle = waterColor;
                     }
                   } else {
                     if(this.colorCell(waterChance)) {
                       waterSeeds.push(otherSite);
-                     ctx.fillStyle = 'rgba(0,76,153,1)';
+                     ctx.fillStyle = waterColor;
                     } else {
                       landSeeds.push(otherSite);
-                      ctx.fillStyle = 'rgba(204,0,0,1)';
+                      ctx.fillStyle = landColor;
                     }
                   }
                   ctx.fill();
@@ -375,6 +434,66 @@
         cellShaderLevel += 1;
         newOuterEdge.length = 0;
      }
+    },
+
+    traverseGraph: function(cells) {
+      // Pick n,m random seed cells for land and water
+      var seeds = this.generateSeeds(numLandSeeds+numWaterSeeds);
+      var landSeeds = seeds.slice(0,numLandSeeds);
+      var waterSeeds = seeds.slice(numLandSeeds,seeds.length);
+      var landCells = landSeeds.splice();
+      var waterCells = waterSeeds.splice();
+
+      // Keep a running tab of all the cells we still have to visit
+      var cellsToVisit = [];
+      for (var i = 0; i <= numSites-1; i++) {
+        if(seeds.indexOf(i) == -1) { cellsToVisit.push(i); }
+      }
+
+      // And cells on the 'edge', which will just be our seed cells for now
+      var cellsEdge = [];
+      var newOuterEdge = [];
+      var cellShaderLevel = 1;
+      for (var i = 0; i < seeds.length; i++) {
+        cellsEdge.push(seeds[i]);
+      }
+
+      console.log("Seeds:", seeds);
+
+      // While there are still cells to visit
+      while(cellsToVisit.length > 0) {
+        // Visist each cell on the edge
+        for (var i=0; i<cellsEdge.length; i++) {
+          var cellSite = cellsEdge[i];
+          var edges = cells[cellSite].halfedges;
+          var isOnEdge = false;
+
+          // Visit each edge of the cell
+          for(var j=0; j<edges.length; j++) {
+            var lSite = edges[j].edge.lSite != null ? edges[j].edge.lSite.voronoiId : null;
+            var rSite = edges[j].edge.rSite != null ? edges[j].edge.rSite.voronoiId : null;
+
+            // If one of the edges is null, this cell is along the perimeter
+            // Label is water, move on
+            if (lSite != null && rSite != null) {
+              var otherSite = lSite == cellSite ? rSite : lSite;
+
+              if(cellsToVisit.indexOf(otherSite) != -1) {
+                newOuterEdge.push(otherSite);
+              }
+            } else {isOnEdge = true;}
+          }
+          cellsToVisit.splice(cellsToVisit.indexOf(otherSite),1);
+          if(isOnEdge && waterSeeds.indexOf(cellSite)==-1) {waterSeeds.push(cellSite);}
+
+        }
+        // Copy our newOuterEdge to cellsEdge and clear cellsEdge
+        cellsEdge.length = 0;
+        cellsEdge = newOuterEdge.slice();
+        cellShaderLevel += 1;
+        newOuterEdge.length = 0;
+     }
+     console.log("Water Seeds:",waterSeeds);
     },
 
     colorCell: function(chance) {
